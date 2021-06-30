@@ -11,11 +11,28 @@ import argparse
 
 PATH = './assets/chromedriver.exe'
 
-TARGET_URL_1 = 'https://www.twilio.com/'
-TARGET_URL_2 = 'https://datafull.com.br/'
+TARGET_URL_1 = 'https://pedantic-lumiere.67-23-238-111.plesk.page/'
 
-MIN_SLEEP_TIME = 1
-MAX_SLEEP_TIME = 2
+DICT_TABS = {
+            'news': 'https://pedantic-lumiere.67-23-238-111.plesk.page/index.php/news-page',
+            'sports': 'https://pedantic-lumiere.67-23-238-111.plesk.page/index.php/sports-page',
+            'tech': 'https://pedantic-lumiere.67-23-238-111.plesk.page/index.php/tech-page',
+            'lifestyle': 'https://pedantic-lumiere.67-23-238-111.plesk.page/index.php/lifestyle-page',
+            'finance': 'https://pedantic-lumiere.67-23-238-111.plesk.page/index.php/finance-page',
+            'video': 'https://pedantic-lumiere.67-23-238-111.plesk.page/index.php/video-page',
+            'authors': 'https://pedantic-lumiere.67-23-238-111.plesk.page/index.php/authors'
+            }
+
+EXTERNAL_LINKS = {
+    'twilio': 'https://www.twilio.com/',
+    'github': 'https://github.com/',
+    'codepen': 'https://codepen.io/',
+    'codeforces': 'https://codeforces.com/',
+    'hackkerrank': 'https://www.hackerrank.com/'
+}
+
+MIN_SLEEP_TIME = 5
+MAX_SLEEP_TIME = 10
 
 def sleep_time():
     return random.uniform(MIN_SLEEP_TIME, MAX_SLEEP_TIME)
@@ -42,10 +59,11 @@ def scroll_up(driver):
     time.sleep(sleep_time())
 
 def press_tab(driver):
+
     wait = WebDriverWait(driver, 10)
     wait.until(EC.presence_of_element_located((By.XPATH, '//body'))).send_keys(Keys.TAB)
 
-def open_url(driver, url):
+def open_url(driver):
     '''
     Open a url -> Clicks -> Scrolls down -> Presses Tab -> Scrolls up ->
     Presses Tab -> Scrolls down -> Closes the browser
@@ -53,9 +71,7 @@ def open_url(driver, url):
     Tab can also be used to invoke data traffic for a website
     '''
 
-    driver.get(url)
-
-    time.sleep(2)
+    time.sleep(MIN_SLEEP_TIME)
 
     driver.find_element_by_xpath("//body").click()
     driver.find_element_by_xpath("//body").click()
@@ -70,6 +86,24 @@ def open_url(driver, url):
 
     time.sleep(sleep_time()*2)
 
+def open_tab(driver, url):
+    driver.get(url)
+    time.sleep(5)
+
+
+def run(driver):
+    driver.get(TARGET_URL_1)
+    open_url(driver)
+
+    total_visit = random.randint(2, 5)
+    pages = random.choices(list(DICT_TABS.values()), k=total_visit)
+    # print(pages)
+    for page in pages:
+        open_tab(driver, page)
+        open_url(driver)
+    #     print('Done')
+    driver.execute_script(f'''window.open("{random.choice(list(EXTERNAL_LINKS.values()))}", "_blank");''')
+
 
 def bot_visit(user_agent):
     '''
@@ -80,14 +114,19 @@ def bot_visit(user_agent):
     opts.add_argument(f"user-agent={user_agent}")
     opts.add_experimental_option("excludeSwitches", ['enable-automation'])
     driver = webdriver.Chrome(executable_path=PATH, chrome_options=opts)
+    driver.maximize_window()
 
-    open_url(driver, TARGET_URL_1)
-    open_url(driver, TARGET_URL_2)
-
+    run(driver)
+    time.sleep(sleep_time()*2)
     driver.quit()
 
 def get_user_agent(k):
     with open('./assets/user-agents.txt') as user_agents:
+        user_agent = user_agents.readlines()
+        return random.choices(user_agent, k=k)
+
+def get_user_agent_phone(k):
+    with open('./assets/user-agents-phone.txt') as user_agents:
         user_agent = user_agents.readlines()
         return random.choices(user_agent, k=k)
 
@@ -100,6 +139,7 @@ def get_args():
 
 if __name__ == '__main__':
     args = get_args()
-    user_agents = get_user_agent(args.num_agent)
+    total_user_desktop = random.randint(1, args.num_agent)
+    user_agents = get_user_agent(total_user_desktop) + get_user_agent_phone(args.num_agent-total_user_desktop)
     with ThreadPoolExecutor(max_workers=args.num_concurrent) as executor:
         executor.map(bot_visit, user_agents)
