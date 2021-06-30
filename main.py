@@ -1,5 +1,6 @@
 import random
 import time
+from math import ceil
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -130,6 +131,11 @@ def get_user_agent_phone(k):
         user_agent = user_agents.readlines()
         return random.choices(user_agent, k=k)
 
+def get_user_agent_tab(k):
+    with open('./assets/user-agents-tab.txt') as user_agents:
+        user_agent = user_agents.readlines()
+        return random.choices(user_agent, k=k)
+
 def get_args():
     parser = argparse.ArgumentParser(description='Bot visits websites')
     parser.add_argument('--num_concurrent', help='Number of browsers working in parallel', type=int)
@@ -139,7 +145,11 @@ def get_args():
 
 if __name__ == '__main__':
     args = get_args()
-    total_user_desktop = random.randint(1, args.num_agent)
-    user_agents = get_user_agent(total_user_desktop) + get_user_agent_phone(args.num_agent-total_user_desktop)
+    total = args.num_agent
+    user_ag_desk = get_user_agent(ceil(total * 0.35))
+    user_ag_phone = get_user_agent_phone(ceil(total * 0.65))
+    user_ag_tab = get_user_agent_tab(max(1, int(total * 0.05)))
+    user_agents = user_ag_phone + user_ag_desk + user_ag_tab
+
     with ThreadPoolExecutor(max_workers=args.num_concurrent) as executor:
         executor.map(bot_visit, user_agents)
