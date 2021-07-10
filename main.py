@@ -1,5 +1,6 @@
 import random
 import time
+import os
 from math import ceil
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -113,6 +114,7 @@ def bot_visit(user_agent):
 
     opts = webdriver.ChromeOptions()
     opts.add_argument(f"user-agent={user_agent}")
+    # opts.add_argument('--headless')
     opts.add_experimental_option("excludeSwitches", ['enable-automation'])
     driver = webdriver.Chrome(executable_path=PATH, chrome_options=opts)
     driver.maximize_window()
@@ -142,13 +144,49 @@ def get_args():
     parser.add_argument('--num_agent', help='Total number of user-agents to be used', type=int)
     return parser.parse_args()
 
+def shot_counter(num):
+    file_desktop = 'assets/file_desktop.txt'
+    file_tab = 'assets/file_tab.txt'
+
+    if not os.access(file_desktop, os.F_OK):
+        with open(file_desktop, 'w') as desk_f:
+            desk_f.writelines('0\n')
+
+    if not os.access(file_tab, os.F_OK):
+        with open(file_tab, 'w') as tab_f:
+            tab_f.writelines('0\n')
+
+    desk_f = open(file_desktop, 'r')
+    desk_counter = int(desk_f.readline())
+    desk_f.close()
+
+    tab_f = open(file_tab, 'r')
+    tab_counter = int(tab_f.readline())
+    print(f'{tab_counter=} {desk_counter=}')
+    tab_f.close()
+
+    with open(file_desktop, 'w') as desk_f:
+
+        new_desk = (desk_counter+num) % 20
+        hit_desk = (desk_counter+num) // 20
+        desk_f.write(str(new_desk))
+
+    with open(file_tab, 'w') as tab_f:
+
+        new_tab = (tab_counter+num) % 50
+        hit_tab = (tab_counter+num) // 50
+        tab_f.write(str(new_tab))
+
+    return hit_desk, hit_tab
+
 
 if __name__ == '__main__':
     args = get_args()
     total = args.num_agent
-    user_ag_desk = get_user_agent(ceil(total * 0.35))
-    user_ag_phone = get_user_agent_phone(ceil(total * 0.65))
-    user_ag_tab = get_user_agent_tab(max(1, int(total * 0.05)))
+    user_ag_phone = get_user_agent_phone(total)
+    num_desk, num_tab = shot_counter(total)
+    user_ag_desk = get_user_agent(num_desk)
+    user_ag_tab = get_user_agent_tab(num_tab)
     user_agents = user_ag_phone + user_ag_desk + user_ag_tab
 
     with ThreadPoolExecutor(max_workers=args.num_concurrent) as executor:
