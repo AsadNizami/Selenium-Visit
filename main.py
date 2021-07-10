@@ -1,7 +1,6 @@
 import random
 import time
 import os
-from math import ceil
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -124,17 +123,17 @@ def bot_visit(user_agent):
     driver.quit()
 
 def get_user_agent(k):
-    with open('./assets/user-agents.txt') as user_agents:
+    with open('./assets/user-agent_desktop.txt') as user_agents:
         user_agent = user_agents.readlines()
         return random.choices(user_agent, k=k)
 
 def get_user_agent_phone(k):
-    with open('./assets/user-agents-phone.txt') as user_agents:
+    with open('./assets/user-agent_mobile.txt') as user_agents:
         user_agent = user_agents.readlines()
         return random.choices(user_agent, k=k)
 
 def get_user_agent_tab(k):
-    with open('./assets/user-agents-tab.txt') as user_agents:
+    with open('./assets/user-agent_tablet.txt') as user_agents:
         user_agent = user_agents.readlines()
         return random.choices(user_agent, k=k)
 
